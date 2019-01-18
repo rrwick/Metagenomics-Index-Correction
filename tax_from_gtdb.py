@@ -100,7 +100,8 @@ def load_taxa(gtdb_taxonomy_filename):
                     assert taxon == 's__'
                     genus = tax_levels[i-1]
                     assert genus.startswith('g__')
-                    new_species_name = 's__{} unknown_{}'.format(genus[3:], next(unknown_taxa_counter))
+                    new_species_name = 's__{} unknown_{}'.format(genus[3:],
+                                                                 next(unknown_taxa_counter))
                     taxon = new_species_name
                 if taxon.startswith('s__'):
                     accession_to_species[assembly_accession] = taxon
@@ -255,7 +256,6 @@ def find_assemblies_for_accessions(accessions, all_assemblies):
         wrapper = textwrap.TextWrapper(initial_indent='    ', subsequent_indent='    ', width=100)
         print(wrapper.fill(', '.join(not_found)))
     return acc_to_assemblies
-
 
 
 def write_conversion_file(conversion_filename, accession_to_species, taxon_to_id, acc_to_assemblies,
