@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 """
+This script parses a Centrifuge-generated SAM file to give some stats about the classifications.
 
+It prints a table to stdout with the following columns:
+  * file:                 the name of the SAM file
+  * read_count:           the total number of reads
+  * unclassified_count:   the number of reads which were not classified
+  * unclassified_percent: the percentage of reads which were not classified
+  * root_count:           the number of reads with an LCA classification to the root level
+  * root_percent:         the percentage of reads with an LCA classification to the root level
+  * domain_count:         the number of reads with an LCA classification to the domain level
+  * domain_percent:       the percentage of reads with an LCA classification to the domain level
+  * phylum_count:         the number of reads with an LCA classification to the phylum level
+  * phylum_percent:       the percentage of reads with an LCA classification to the phylum level
+  * class_count:          the number of reads with an LCA classification to the class level
+  * class_percent:        the percentage of reads with an LCA classification to the class level
+  * order_count:          the number of reads with an LCA classification to the order level
+  * order_percent:        the percentage of reads with an LCA classification to the order level
+  * family_count:         the number of reads with an LCA classification to the family level
+  * family_percent:       the percentage of reads with an LCA classification to the family level
+  * genus_count:          the number of reads with an LCA classification to the genus level
+  * genus_percent:        the percentage of reads with an LCA classification to the genus level
+  * species_count:        the number of reads with an LCA classification to the species level
+  * species_percent:      the percentage of reads with an LCA classification to the species level
+  * lca_ids:              the number of distinct LCA (one per read) classifications
+  * align_ids:            the number of distinct per-alignment (can be multiple per read)
+                          classifications
+  * leaf_ids:             the number of distinct per-alignment classifications to leaf nodes of the
+                          taxonomy tree
+  * total_ids:            the number of distinct classifications of any type (either per-alignment
+                          or LCA)
 """
 
 import argparse
@@ -26,62 +55,57 @@ def get_arguments():
 def main():
     args = get_arguments()
     print_header(args)
-    tax_id_to_parent = load_tax_id_to_parent(args.tree)
-    tax_id_to_rank = load_tax_id_to_rank(args.tree, tax_id_to_parent)
+    tax_id_to_parent, tax_id_to_rank, leaf_ids = load_tax_info(args.tree)
     tax_ids_per_read = load_tax_ids_per_read(args.sam)
+    read_count = len(tax_ids_per_read)
 
     count_per_rank = collections.defaultdict(int)
+    align_ids, leaves, lca_ids = set(), set(), set()
     for read_name, tax_ids in tax_ids_per_read.items():
-        add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to_parent)
+        lca_id = add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to_parent)
+        align_ids.update(tax_ids)
+        leaves.update(i for i in tax_ids if i in leaf_ids)
+        lca_ids.add(lca_id)
 
-    print_summary(args.sam, count_per_rank)
+    print_summary(args.sam, read_count, count_per_rank, align_ids, leaves, lca_ids)
 
 
-def load_tax_id_to_parent(tree_filename):
+def load_tax_info(tree_filename):
     """
-    This function reads through the tree file, returning a dictionary where the keys are tax IDs
-    and the values are the parent tax IDs. This dictionary allows for tracing 'upward' (toward the
-    root) through the tree, starting at any node.
+    This function reads through the tree file, and returns two dictionaries:
+      1) Where the keys are tax IDs and the values are the parent tax IDs. This dictionary allows
+         for tracing 'upward' (toward the root) through the tree, starting at any node.
+      2) Where the keys are tax IDs and the values are taxonomic ranks. Importantly, this
+         dictionary does not include all taxonomic ranks in the tree, but only the standard levels
+         (phylum, class, order, etc). When a tax ID has a non-standard rank (e.g. subfamily), that
+         ID is given the first standard rank found in its ancestors (e.g. family).
     """
-    tax_id_to_parent = {}
-    with get_open_func(tree_filename)(tree_filename, 'rt') as tree_file:
-        for line in tree_file:
-            parts = line.strip().split('\t')
-            tax_id = int(parts[0])
-            parent = int(parts[2])
-            tax_id_to_parent[tax_id] = parent
-    return tax_id_to_parent
+    print('Loading tree:', file=sys.stderr)
 
-
-def load_tax_id_to_rank(tree_filename, tax_id_to_parent):
-    """
-    This function reads through the tree file, returning a dictionary where the keys are tax IDs
-    and the values are taxonomic ranks. Importantly, this dictionary does not include all taxonomic
-    ranks in the tree, but only the standard levels (phylum, class, order, etc). When a tax ID has
-    a non-standard rank (e.g. subfamily), that ID is given the first standard rank found in its
-    ancestors (e.g. family).
-    """
     tree_data = []
     open_func = get_open_func(tree_filename)
     with open_func(tree_filename, 'rt') as tree_file:
         for line in tree_file:
             parts = line.strip().split('\t')
-            tree_data.append([int(parts[0]), parts[4].lower()])
+            tree_data.append([int(parts[0]), int(parts[2]), parts[4].lower()])
 
-    tax_id_to_rank = {0: 'unclassified'}
-    acceptable_ranks = {'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species'}
+    tax_id_to_parent = {}
+    for tax_id, parent_id, _ in tree_data:
+        tax_id_to_parent[tax_id] = parent_id
 
     # The first time we go through the tax IDs, we save any which has an acceptable rank.
-    for tax_id, rank in tree_data:
+    tax_id_to_rank = {0: 'unclassified'}
+    acceptable_ranks = {'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species'}
+    for tax_id, parent_id, rank in tree_data:
         if rank in acceptable_ranks:
             tax_id_to_rank[tax_id] = rank
         elif tax_id == 1:  # special case for the root node
-            assert tax_id == tax_id_to_parent[tax_id]  # the root is its own parent
+            assert tax_id == parent_id  # the root is its own parent
             tax_id_to_rank[tax_id] = 'root'
 
     # Now we go through a second time to deal with tax IDs that didn't get an acceptable rank the
     # first time.
-    for tax_id, rank in tree_data:
+    for tax_id, _, rank in tree_data:
         if tax_id in tax_id_to_rank:
             continue
         assert rank not in acceptable_ranks
@@ -93,7 +117,13 @@ def load_tax_id_to_rank(tree_filename, tax_id_to_parent):
                 break
         assert tax_id in tax_id_to_rank
 
-    return tax_id_to_rank
+    all_tax_ids = set(tax_id_to_parent.keys())
+    leaf_ids = all_tax_ids - set(tax_id_to_parent.values())
+    print('  total tax IDs:  {}'.format(len(all_tax_ids)), file=sys.stderr)
+    print('  total leaf IDs: {}'.format(len(leaf_ids)), file=sys.stderr)
+    print('', file=sys.stderr)
+
+    return tax_id_to_parent, tax_id_to_rank, leaf_ids
 
 
 def load_tax_ids_per_read(sam_filename):
@@ -111,7 +141,6 @@ def load_tax_ids_per_read(sam_filename):
     return tax_ids_per_read
 
 
-
 def add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to_parent):
     if len(tax_ids) == 0:
         return
@@ -123,8 +152,8 @@ def add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to
         tax_id = find_lca(tax_ids, tax_id_to_parent)
     rank = tax_id_to_rank[tax_id]
     print('{}\t{}'.format(tax_id, rank), file=sys.stderr)
-    # print('{}\t{}\t{}'.format(read_name, tax_id, rank))
     count_per_rank[rank] += 1
+    return tax_id
 
 
 def find_lca(tax_ids, tax_id_to_parent):
@@ -167,10 +196,11 @@ def get_all_ancestors(tax_id, tax_id_to_parent):
 
 def print_header(args):
     if args.header:
-        header = 'file'
-        for rank in ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family', 'genus',
-                     'species']:
+        header = 'file\tread_count'
+        for rank in ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family',
+                     'genus', 'species']:
             header += '\t{}_count\t{}_percent'.format(rank, rank)
+        header += '\tlca_ids\talign_ids\tleaf_ids\ttotal_ids'
         print(header)
 
     # If the user only asked for the header and nothing else, then we're done.
@@ -178,14 +208,22 @@ def print_header(args):
         sys.exit(0)
 
 
-def print_summary(sam_filename, count_per_rank):
+def print_summary(sam_filename, read_count, count_per_rank, align_ids, leaves, lca_ids):
     total = sum(count_per_rank.values())
-    summary = sam_filename
+    summary = '{}\t{}'.format(sam_filename, read_count)
+    total_count = 0
     for rank in ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family', 'genus',
                  'species']:
         count = count_per_rank[rank]
+        total_count += count
         percent = 100 * count / total
         summary += '\t{}\t{:.4f}'.format(count, percent)
+    assert read_count == total_count  # sanity check
+    summary += '\t{}'.format(len(lca_ids))
+    summary += '\t{}'.format(len(align_ids))
+    summary += '\t{}'.format(len(leaves))
+    total_ids = align_ids | lca_ids
+    summary += '\t{}'.format(len(total_ids))
     print(summary)
 
 
