@@ -22,7 +22,8 @@ def get_arguments():
                             help='GTDB bac_taxonomy_r*.tsv file (required)')
     input_args.add_argument('--assemblies', type=str,
                             help='directory containing GTDB assembly files (required to make '
-                                 'contig-to-taxid conversion file or concatenated FASTA)')
+                                 'contig-to-taxid conversion file, concatenated FASTA or Kraken '
+                                 'directory)')
     input_args.add_argument('--tree', type=str,
                             help='If provided, this script will only use assemblies that are in '
                                  'the tree (for building with the dereplicated genomes)')

@@ -27,7 +27,7 @@ def get_arguments():
                         help='Directory where dereplicated assemblies will be copied')
     parser.add_argument('tax_file', type=str,
                         help='GTDB taxonomy file')
-    parser.add_argument('--threshold', type=float, default=0.002,
+    parser.add_argument('--threshold', type=float, default=0.005,
                         help='Mash distance clustering threshold')
     parser.add_argument('--threads', type=int, default=16,
                         help='Number of threads (for Mash)')
