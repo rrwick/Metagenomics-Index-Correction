@@ -26,7 +26,7 @@ def get_arguments():
 def main():
     args = get_arguments()
 
-    tax_id_to_parent, tax_id_to_rank, leaf_ids = load_tax_info(args.tree)
+    tax_id_to_parent, tax_id_to_rank, tax_id_to_standard_rank = load_tax_info(args.tree)
     tax_ids_per_read = load_tax_ids_per_read(args.sam)
     read_count = len(tax_ids_per_read)
 
@@ -39,7 +39,7 @@ def main():
         read_file.write('\n')
 
         for read_name, tax_ids in tax_ids_per_read.items():
-            tax_id = add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank,
+            tax_id = add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_standard_rank,
                                     tax_id_to_parent, read_file)
 
             if tax_id > 0:  # the read was classified
@@ -49,8 +49,10 @@ def main():
                         break
                     tax_id = tax_id_to_parent[tax_id]
 
-    write_summary(args.sam, args.prefix, read_count, count_per_rank)
-    write_cumulative_count_table(args.sam, args.prefix, cumulative_counts_per_tax_id, read_count)
+    write_summary(args.sam, args.prefix, read_count, count_per_rank, cumulative_counts_per_tax_id,
+                  tax_id_to_rank)
+    write_cumulative_count_table(args.sam, args.prefix, cumulative_counts_per_tax_id, read_count,
+                                 tax_id_to_rank)
 
 
 def load_tax_info(tree_filename):
@@ -77,33 +79,32 @@ def load_tax_info(tree_filename):
         tax_id_to_parent[tax_id] = parent_id
 
     # The first time we go through the tax IDs, we save any which has an acceptable rank.
-    tax_id_to_rank = {0: 'unclassified'}
+    tax_id_to_rank, tax_id_to_standard_rank = {0: 'unclassified'}, {0: 'unclassified'}
     acceptable_ranks = {'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species'}
     for tax_id, parent_id, rank in tree_data:
+        tax_id_to_rank[tax_id] = rank
         if rank in acceptable_ranks:
-            tax_id_to_rank[tax_id] = rank
+            tax_id_to_standard_rank[tax_id] = rank
         elif tax_id == 1:  # special case for the root node
             assert tax_id == parent_id  # the root is its own parent
+            tax_id_to_standard_rank[tax_id] = 'root'
             tax_id_to_rank[tax_id] = 'root'
 
     # Now we go through a second time to deal with tax IDs that didn't get an acceptable rank the
     # first time.
     for tax_id, _, rank in tree_data:
-        if tax_id in tax_id_to_rank:
+        if tax_id in tax_id_to_standard_rank:
             continue
         assert rank not in acceptable_ranks
         ancestors = get_all_ancestors(tax_id, tax_id_to_parent)
         for ancestor in ancestors:
-            if ancestor in tax_id_to_rank:
-                rank = tax_id_to_rank[ancestor]
-                tax_id_to_rank[tax_id] = rank
+            if ancestor in tax_id_to_standard_rank:
+                rank = tax_id_to_standard_rank[ancestor]
+                tax_id_to_standard_rank[tax_id] = rank
                 break
-        assert tax_id in tax_id_to_rank
+        assert tax_id in tax_id_to_standard_rank
 
-    all_tax_ids = set(tax_id_to_parent.keys())
-    leaf_ids = all_tax_ids - set(tax_id_to_parent.values())
-
-    return tax_id_to_parent, tax_id_to_rank, leaf_ids
+    return tax_id_to_parent, tax_id_to_rank, tax_id_to_standard_rank
 
 
 def load_tax_ids_per_read(sam_filename):
@@ -179,37 +180,56 @@ def get_all_ancestors(tax_id, tax_id_to_parent):
     return ancestors
 
 
-def write_summary(sam_filename, prefix, read_count, count_per_rank):
+def write_summary(sam_filename, prefix, read_count, count_per_rank, cumulative_counts_per_tax_id,
+                  tax_id_to_rank):
+    ranks = ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family', 'genus',
+             'species']
+    taxa_count_ranks = ['phylum', 'class', 'order', 'family', 'genus', 'species']
+    rank_set = set(ranks)
+
+    # Count the number of taxa in each of the standard ranks.
+    rank_tax_ids = collections.defaultdict(set)
+    for tax_id, count in cumulative_counts_per_tax_id.items():
+        if count > 0:
+            rank = tax_id_to_rank[tax_id]
+            if rank in rank_set:
+                rank_tax_ids[rank].add(tax_id)
+    rank_counts = {rank: len(tax_ids) for rank, tax_ids in rank_tax_ids.items()}
+
     summary_filename = prefix + '_summary.tsv'
     with open(summary_filename, 'wt') as summary_file:
         header = 'file\tread_count'
-        for rank in ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family',
-                     'genus', 'species']:
-            header += '\t{}_count\t{}_percent'.format(rank, rank)
+
+        for rank in ranks:
+            header += '\t{}_read_count\t{}_read_percent'.format(rank, rank)
+            if rank in taxa_count_ranks:
+                header += '\t{}_taxa_count'.format(rank)
         summary_file.write(header)
         summary_file.write('\n')
 
         total = sum(count_per_rank.values())
         summary = '{}\t{}'.format(sam_filename, read_count)
         total_count = 0
-        for rank in ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family', 'genus',
-                     'species']:
+        for rank in ranks:
             count = count_per_rank[rank]
             total_count += count
             percent = 100 * count / total
             summary += '\t{}\t{:.4f}'.format(count, percent)
+            if rank in taxa_count_ranks:
+                summary += '\t{}'.format(rank_counts[rank])
         assert read_count == total_count  # sanity check
         summary_file.write(summary)
         summary_file.write('\n')
 
 
-def write_cumulative_count_table(sam_filename, prefix, cumulative_counts_per_tax_id, read_count):
+def write_cumulative_count_table(sam_filename, prefix, cumulative_counts_per_tax_id, read_count,
+                                 tax_id_to_rank):
     count_filename = prefix + '_counts.tsv'
     with open(count_filename, 'wt') as count_file:
         tax_ids = sorted(cumulative_counts_per_tax_id.keys())
         count_file.write('read_set')
         for tax_id in tax_ids:
-            count_file.write('\t{}'.format(tax_id))
+            count_file.write('\t{}-{}'.format(tax_id_to_rank[tax_id], tax_id))
         count_file.write('\n')
         count_file.write(sam_filename)
         for tax_id in tax_ids:
