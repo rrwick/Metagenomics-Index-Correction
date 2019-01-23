@@ -35,13 +35,13 @@ def main():
 
     read_table_filename = args.prefix + '_reads.tsv'
     with open(read_table_filename, 'wt') as read_file:
-        read_file.write('\t'.join(['read_name', 'alignment_classes', 'lca_class', 'lca_rank']))
+        read_file.write('\t'.join(['read_name', 'alignment_tax_ids', 'lca_tax_id', 'lca_rank',
+                                   'lca_standard_rank']))
         read_file.write('\n')
 
         for read_name, tax_ids in tax_ids_per_read.items():
-            tax_id = add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_standard_rank,
-                                    tax_id_to_parent, read_file)
-
+            tax_id = add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank,
+                                    tax_id_to_standard_rank, tax_id_to_parent, read_file)
             if tax_id > 0:  # the read was classified
                 while True:
                     cumulative_counts_per_tax_id[tax_id] += 1
@@ -126,7 +126,8 @@ def load_tax_ids_per_read(sam_filename):
     return tax_ids_per_read
 
 
-def add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to_parent, read_file):
+def add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to_standard_rank,
+                   tax_id_to_parent, read_file):
     if len(tax_ids) == 0:
         return
     tax_ids_str = ','.join(str(i) for i in tax_ids)
@@ -137,8 +138,9 @@ def add_rank_count(read_name, count_per_rank, tax_ids, tax_id_to_rank, tax_id_to
         tax_ids.discard(0)
         tax_id = find_lca(tax_ids, tax_id_to_parent)
     rank = tax_id_to_rank[tax_id]
-    read_file.write('{}\t{}\n'.format(tax_id, rank))
-    count_per_rank[rank] += 1
+    standard_rank = tax_id_to_standard_rank[tax_id]
+    read_file.write('{}\t{}\t{}\n'.format(tax_id, rank, standard_rank))
+    count_per_rank[standard_rank] += 1
     return tax_id
 
 
@@ -184,7 +186,7 @@ def write_summary(sam_filename, prefix, read_count, count_per_rank, cumulative_c
                   tax_id_to_rank):
     ranks = ['unclassified', 'root', 'domain', 'phylum', 'class', 'order', 'family', 'genus',
              'species']
-    taxa_count_ranks = ['phylum', 'class', 'order', 'family', 'genus', 'species']
+    taxa_count_ranks = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
     rank_set = set(ranks)
 
     # Count the number of taxa in each of the standard ranks.
@@ -224,9 +226,20 @@ def write_summary(sam_filename, prefix, read_count, count_per_rank, cumulative_c
 
 def write_cumulative_count_table(sam_filename, prefix, cumulative_counts_per_tax_id, read_count,
                                  tax_id_to_rank):
+    rank_ordering = {'root': 0, 'domain': 1, 'superkingdom': 2, 'kingdom': 3, 'subkingdom': 4,
+                     'superphylum': 5, 'phylum': 6, 'subphylum': 7, 'superclass': 8, 'class': 9,
+                     'subclass': 10, 'infraclass': 11, 'cohort': 12, 'superorder': 13, 'order': 14,
+                     'suborder': 15, 'infraorder': 16, 'parvorder': 17, 'superfamily': 18,
+                     'epifamily': 19, 'family': 20, 'subfamily': 21, 'infrafamily': 22,
+                     'tribe': 23, 'subtribe': 24, 'infratribe': 25, 'genus': 26, 'subgenus': 27,
+                     'species group': 28, 'species subgroup': 29, 'species': 30, 'subspecies': 31,
+                     'varietas': 32, 'forma': 33, 'no rank': 34}
+
+    tax_ids = list(cumulative_counts_per_tax_id.keys())
+    tax_ids = sorted(tax_ids, key=lambda x: (rank_ordering[tax_id_to_rank[x]], x))
+
     count_filename = prefix + '_counts.tsv'
     with open(count_filename, 'wt') as count_file:
-        tax_ids = sorted(cumulative_counts_per_tax_id.keys())
         count_file.write('read_set')
         for tax_id in tax_ids:
             count_file.write('\t{}-{}'.format(tax_id_to_rank[tax_id], tax_id))
