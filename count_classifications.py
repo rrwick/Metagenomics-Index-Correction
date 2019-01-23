@@ -226,14 +226,21 @@ def write_summary(sam_filename, prefix, read_count, count_per_rank, cumulative_c
 
 def write_cumulative_count_table(sam_filename, prefix, cumulative_counts_per_tax_id, read_count,
                                  tax_id_to_rank):
-    rank_ordering = {'root': 0, 'domain': 1, 'superkingdom': 2, 'kingdom': 3, 'subkingdom': 4,
-                     'superphylum': 5, 'phylum': 6, 'subphylum': 7, 'superclass': 8, 'class': 9,
-                     'subclass': 10, 'infraclass': 11, 'cohort': 12, 'superorder': 13, 'order': 14,
-                     'suborder': 15, 'infraorder': 16, 'parvorder': 17, 'superfamily': 18,
-                     'epifamily': 19, 'family': 20, 'subfamily': 21, 'infrafamily': 22,
-                     'tribe': 23, 'subtribe': 24, 'infratribe': 25, 'genus': 26, 'subgenus': 27,
-                     'species group': 28, 'species subgroup': 29, 'species': 30, 'subspecies': 31,
-                     'varietas': 32, 'forma': 33, 'no rank': 34}
+    rank_ordering = ['root', 'domain', 'subdomain', 'hyperkingdom', 'superkingdom', 'kingdom',
+                     'subkingdom', 'infrakingdom', 'parvkingdom', 'superphylum', 'phylum',
+                     'subphylum', 'infraphylum', 'microphylum', 'superclass', 'class', 'subclass',
+                     'infraclass', 'parvclass', 'superdivision', 'division', 'subdivision',
+                     'infradivision', 'superlegion', 'legion', 'sublegion', 'infralegion',
+                     'supercohort', 'cohort', 'subcohort', 'infracohort', 'gigaorder', 'magnorder',
+                     'grandorder', 'mirorder', 'superorder', 'order', 'nanorder', 'hypoorder',
+                     'minorder', 'suborder', 'infraorder', 'parvorder', 'microorder', 'gigafamily',
+                     'megafamily', 'grandfamily', 'hyperfamily', 'superfamily', 'epifamily',
+                     'family', 'subfamily', 'infrafamily', 'supertribe', 'tribe', 'subtribe',
+                     'infratribe', 'genus', 'subgenus', 'section', 'subsection', 'series',
+                     'subseries', 'species group', 'species subgroup', 'superspecies', 'species',
+                     'subspecies', 'varietas', 'subvarietas', 'forma', 'subforma', 'strain',
+                     'no rank']
+    rank_ordering = {rank: n for n, rank in enumerate(rank_ordering)}
 
     tax_ids = list(cumulative_counts_per_tax_id.keys())
     tax_ids = sorted(tax_ids, key=lambda x: (rank_ordering[tax_id_to_rank[x]], x))
