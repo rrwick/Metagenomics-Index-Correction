@@ -197,6 +197,9 @@ def write_summary(sam_filename, prefix, read_count, count_per_rank, cumulative_c
             if rank in rank_set:
                 rank_tax_ids[rank].add(tax_id)
     rank_counts = {rank: len(tax_ids) for rank, tax_ids in rank_tax_ids.items()}
+    for rank in ranks:
+        if rank not in rank_counts:
+            rank_counts[rank] = 0
 
     summary_filename = prefix + '_summary.tsv'
     with open(summary_filename, 'wt') as summary_file:
