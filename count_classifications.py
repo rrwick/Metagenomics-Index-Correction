@@ -119,7 +119,9 @@ def load_tax_ids_per_read(sam_filename):
             read_name = parts[0]
             if read_name == 'readID':  # header
                 continue
-            tax_id = int(parts[2])
+            seq_id, tax_id = parts[1], int(parts[2])
+            if tax_id == 0:
+                assert seq_id == 'unclassified'  # a taxID of 0 with a non-unclassified seqID implies something went wrong in the index building
             if read_name not in tax_ids_per_read:
                 tax_ids_per_read[read_name] = set()
             tax_ids_per_read[read_name].add(tax_id)
