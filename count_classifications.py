@@ -120,6 +120,8 @@ def load_tax_ids_per_read(sam_filename):
             if read_name == 'readID':  # header
                 continue
             seq_id, tax_id = parts[1], int(parts[2])
+            if seq_id == 'no rank':
+                tax_id = 1
             if tax_id == 0:
                 assert seq_id == 'unclassified'  # a taxID of 0 with a non-unclassified seqID implies something went wrong in the index building
             if read_name not in tax_ids_per_read:
