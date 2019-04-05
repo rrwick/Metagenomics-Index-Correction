@@ -71,7 +71,7 @@ With:
 
 `bac_and_arc_taxonomy_r86.tsv`: GTDB taxonomy for all bacterial genomes from the [GTDB website](http://gtdb.ecogenomic.org/downloads)
 
-## Count "N-heavy" reads in FASTQ sequencing reads.
+## Counting "N-heavy" reads in FASTQ sequencing reads.
 
 The simple 'read_set_n_count.py' script has been written to deal with the fact that some [HMP](https://hmpdacc.org/) read sets are full of `N`-heavy reads. It takes one or more read files as input and outputs a table which shows information on the number of reads which are mostly `N`.
 
@@ -89,6 +89,18 @@ four tab-delimited columns:
 
 e.g. `file.fastq    44880075    44382676    98.892%`
 
+
+## Finding reads unclassified in index1 but not in index2 (for the same sample)
+
+To compare Centrifuge classifications between two indices, and identify reads in one particular sample that are unclassified (or another outcome) in one index compared to another, the `find_unclassified.py` script can be used. In order to make sense, this script must be run using the outcomes of two classifications of the same sample using two different indices. This script was used in our analysis to reclassify using the `nt` database reads that had remained unclassified using the GTDB_r86_46k index.
+
+Usage:
+
+`./find_unclassified.py sample_index1.sam sample_index2.sam | grep -v "unclassified" > output.sam`
+
+Output:
+
+`output.sam`: similar SAM format as the regular Centrifuge output.
 
 
 ## License
