@@ -1,5 +1,5 @@
 # Metagenomics Index Correction
-This repository contains scripts used to prepare and analyse Centrifuge classifications using custom index databases, either based on default NCBI or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: "XXXXXX". Brief instructions are provided below each scripts.
+This repository contains a collection of scripts used to prepare, compare and analyse Centrifuge classifications using custom index databases, either based on default NCBI or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: "XXXXXX". Brief instructions are provided below each scripts.
 
 
 
