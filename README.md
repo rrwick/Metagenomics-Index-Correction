@@ -2,8 +2,38 @@
 This repository contains a collection of scripts used to prepare, compare and analyse Centrifuge classifications using custom index databases, either based on default NCBI or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: "XXXXXX". Brief instructions are provided below each scripts.
 
 
+## How to run metagenomic classifications using custom indices based on NCBI or GTDB taxonomic definitions
 
-## Creating a Centrifuge custom index using GTDB taxonomic definitions
+
+**Recommendations for [Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/)** (recommended, used in the manuscript; follow link for instructions to install):
+
+
+_**Step 1.**_ Download pre-compiled indices on: XXXXXXXXXX
+
+
+_**Step 2.**_ Run classifications (command below is for paired FASTQ reads. Please refer to Centrifuge manual for variations on this. Instructions below are also only for 1 sample, and it is possible to loop the instruction):
+
+`centrifuge -p <number of threads (recommended, 16)> -x <filepath to pre-compiled index> -1 <filepath to first fastq file> -2 <filepath to second paired fastq file> -S <filepath to output SAM file> --report-file <filepath to output TSV report file>`
+
+
+_**Step 3.**_ Generation of individual report files from the output of Step 2 (it is possible to loop both steps 2 and 3 in two successive instructions, e.g. when using SLURM):
+
+
+`centrifuge-kreport -x <filepath to pre-compiled index> <filepath to output SAM file from step 2> > <filepath to output Kraken-like report in TXT>`
+
+
+The output will be text files containing a Kraken-like report (one per sample) that can all be read into [Pavian]() to make OTU tables and compare results between metagenomic samples.
+
+
+**Recommendations for [Kraken]()**:
+
+
+To be updated.
+
+
+## Scripts for analysis/index creation used in the manuscript
+
+### Creating a Centrifuge custom index using GTDB taxonomic definitions
 The `tax_from_gtdb.py` script generates an [NCBI-style](ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump_readme.txt) taxonomy using the GTDB definitions (from the GTDB website) and other input files necessary for building a [Centrifuge](https://ccb.jhu.edu/software/centrifuge) or Kraken index database using GTDB.
 
 Usage:
@@ -26,7 +56,7 @@ With:
 
 
 
-## Taxonomic rank count from Centrifuge classification output
+### Taxonomic rank count from Centrifuge classification output
 The `count_classifications.py` script allows the breakdown of read classification to different taxonomic ranks from a raw classification output from Centrifuge. It takes a Centrifuge SAM file as input and produces two outputs:
   * (to stdout) a single-row table summarising the read set
   * (to stderr) a one-row-per-read table describing each read
@@ -49,7 +79,7 @@ With:
 
 
 
-## Creating custom "dereplication" thresholds for assemblies used to build a GTDB-based Centrifuge index
+### Creating custom "dereplication" thresholds for assemblies used to build a GTDB-based Centrifuge index
 
 "Dereplication" refers to the threshold-based selection of representative reference genomes for phylogenetically-similar clusters, and has been used in the GTDB study to provide a reduced, less-redundant list of 28941 bacterial and archaeal reference genomes that are representative of similarity clusters on a phylogenetic tree. By default, the "dereplicated" list proposed on the Downloads section of the [GTDB website](http://gtdb.ecogenomic.org/downloads) contains (release 86; September 2018) 27372 bacterial and 1569 archaeal genomes. As explained in the [GTDB publication](https://www.nature.com/articles/nbt.4229), the dereplication was made according to various criteria, but mostly defining two genomes as being "replicates" when their Mash distance was ≤0.05 (∼ANI of 95%).
 
@@ -71,7 +101,7 @@ With:
 
 `bac_and_arc_taxonomy_r86.tsv`: GTDB taxonomy for all bacterial genomes from the [GTDB website](http://gtdb.ecogenomic.org/downloads)
 
-## Counting "N-heavy" reads in FASTQ sequencing reads.
+### Counting "N-heavy" reads in FASTQ sequencing reads.
 
 The simple 'read_set_n_count.py' script has been written to deal with the fact that some [HMP](https://hmpdacc.org/) read sets are full of `N`-heavy reads. It takes one or more read files as input and outputs a table which shows information on the number of reads which are mostly `N`.
 
@@ -90,7 +120,7 @@ four tab-delimited columns:
 e.g. `file.fastq    44880075    44382676    98.892%`
 
 
-## Finding reads unclassified in index1 but not in index2 (for the same sample)
+### Finding reads unclassified in index1 but not in index2 (for the same sample)
 
 To compare Centrifuge classifications between two indices, and identify reads in one particular sample that are unclassified (or another outcome) in one index compared to another, the `find_unclassified.py` script can be used. In order to make sense, this script must be run using the outcomes of two classifications of the same sample using two different indices. This script was used in our analysis to reclassify using the `nt` database reads that had remained unclassified using the GTDB_r86_46k index.
 
@@ -101,6 +131,7 @@ Usage:
 Output:
 
 `output.sam`: similar SAM format as the regular Centrifuge output.
+
 
 
 ## License
