@@ -305,7 +305,7 @@ def make_kraken_dir(kraken_dir, accession_to_species, taxon_to_id, acc_to_assemb
             contigs = load_fasta(assembly_filename)
             tax_id = taxon_to_id[accession_to_species[accession]]
             new_filename = kraken_dir / (accession + '.fa')
-            with open(new_filename, 'wt') as kraken_fasta:
+            with open(str(new_filename), 'wt') as kraken_fasta:
                 for contig_name, contig_seq in contigs:
                     kraken_fasta.write('>{}|kraken:taxid|{}\n'.format(contig_name, tax_id))
                     kraken_fasta.write('{}\n'.format(contig_seq))
