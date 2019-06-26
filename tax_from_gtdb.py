@@ -310,7 +310,7 @@ def make_kraken_dir(kraken_dir, accession_to_species, taxon_to_id, acc_to_assemb
             new_filename = kraken_dir / (accession + '.fa')
             with open(str(new_filename), 'wt') as kraken_fasta:
                 for contig_name, contig_seq in contigs:
-                    kraken_fasta.write('>{}|kraken:taxid|{}\n'.format(contig_name, tax_id))
+                    kraken_fasta.write('>{}_{}|kraken:taxid|{}\n'.format(accession, contig_name, tax_id))
                     kraken_fasta.write('{}\n'.format(contig_seq))
         print('\r    {:,} / {:,} assemblies'.format(found_count,
                                                     total_count), end='', flush=True)
