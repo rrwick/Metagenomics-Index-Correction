@@ -385,7 +385,7 @@ def load_fasta(filename):
         open_func = get_open_function(filename)
         with open_func(filename, 'rt') as fasta_file:
             name = ''
-            sequence = ''
+            sequence = []
             for line in fasta_file:
                 line = line.strip()
                 if not line:
@@ -393,14 +393,14 @@ def load_fasta(filename):
                 if line[0] == '>':  # Header line = start of new contig
                     if name:
                         contig_name = name.split()[0]
-                        fasta_seqs.append((contig_name, sequence))
-                        sequence = ''
+                        fasta_seqs.append((contig_name, ''.join(sequence)))
+                        sequence = []
                     name = line[1:]
                 else:
-                    sequence += line
+                    sequence.append(line)
             if name:
                 contig_name = name.split()[0]
-                fasta_seqs.append((contig_name, sequence))
+                fasta_seqs.append((contig_name, ''.join(sequence)))
         return fasta_seqs
     except EOFError:
         print('\n    Warning: {} seems to be corrupt'.format(filename))
