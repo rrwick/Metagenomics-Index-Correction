@@ -45,19 +45,22 @@ def get_arguments():
 def main():
     args = get_arguments()
     check_args(args)
+
     all_taxa, parents, accession_to_species = load_taxa(args.gtdb)
     id_to_taxon, taxon_to_id, max_id = set_tax_ids(all_taxa)
     not_unique_names = get_not_unique_names(id_to_taxon, max_id)
     write_nodes_file(args.nodes, id_to_taxon, taxon_to_id, parents, max_id)
     write_names_file(args.names, id_to_taxon, not_unique_names, max_id)
+
     if args.assemblies is not None:
         accessions = sorted(accession_to_species.keys())
-        whitelist = load_tree(args.tree)
         all_assemblies = [str(x) for x in sorted(pathlib.Path(args.assemblies).glob('**/*'))
                           if x.is_file()]
-        if whitelist is not None:
+        if args.tree is not None:
+            whitelist = load_tree(args.tree)
             accessions = [x for x in accessions if x in whitelist]
         acc_to_assemblies = find_assemblies_for_accessions(accessions, all_assemblies)
+
         if args.conversion is not None:
             write_conversion_file(args.conversion, accession_to_species, taxon_to_id,
                                   acc_to_assemblies, accessions)
@@ -75,7 +78,7 @@ def check_args(args):
     if args.kraken_dir is not None:
         kraken_dir = pathlib.Path(args.kraken_dir)
         if kraken_dir.is_file():
-            sys.exit('Error: {} is a file'.format(kraken_dir))
+            sys.exit('Error: {} is a file (must be a directory)'.format(kraken_dir))
         if kraken_dir.is_dir():
             if len(list(kraken_dir.iterdir())) > 0:
                 sys.exit('Error: {} is not empty'.format(kraken_dir))
@@ -270,7 +273,7 @@ def write_conversion_file(conversion_filename, accession_to_species, taxon_to_id
                 contig_names = load_contig_names(assembly_filename)
                 tax_id = taxon_to_id[accession_to_species[accession]]
                 for contig_name in contig_names:
-                    conversion_file.write('{}\t{}\n'.format(contig_name, tax_id))
+                    conversion_file.write('{}_{}\t{}\n'.format(accession, contig_name, tax_id))
                 found_count += 1
                 print('\r    {:,} / {:,} assemblies'.format(found_count,
                                                             total_count), end='', flush=True)
@@ -287,7 +290,7 @@ def make_cat_fasta(cat_fasta_filename, acc_to_assemblies, accessions):
                 found_count += 1
                 contigs = load_fasta(assembly_filename)
                 for contig_name, contig_seq in contigs:
-                    cat_fasta.write('>{}\n'.format(contig_name))
+                    cat_fasta.write('>{}_{}\n'.format(accession, contig_name))
                     cat_fasta.write('{}\n'.format(contig_seq))
             print('\r    {:,} / {:,} assemblies'.format(found_count,
                                                         total_count), end='', flush=True)
