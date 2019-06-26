@@ -1,9 +1,10 @@
 # Metagenomics Index Correction
-This repository contains a collection of scripts used to prepare, compare and analyse Centrifuge classifications using custom index databases, either based on default NCBI or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: "XXXXXX". Brief instructions are provided below each scripts.
+This repository contains a collection of scripts used to prepare, compare and analyse Centrifuge classifications using custom index databases, either based on default NCBI or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: _Correcting index databases greatly improves metagenomic classification performance_. Brief instructions are provided below for each of the scripts.
+
+
 
 
 ## How to run metagenomic classifications using custom indices based on NCBI or GTDB taxonomic definitions
-
 
 **Recommendations for [Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/)** (recommended, used in the manuscript; follow link for instructions to install):
 
@@ -33,26 +34,36 @@ To be updated.
 
 ## Scripts for analysis/index creation used in the manuscript
 
-### Creating a Centrifuge custom index using GTDB taxonomic definitions
-The `tax_from_gtdb.py` script generates an [NCBI-style](ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump_readme.txt) taxonomy using the GTDB definitions (from the GTDB website) and other input files necessary for building a [Centrifuge](https://ccb.jhu.edu/software/centrifuge) or Kraken index database using GTDB.
+### Creating a custom classification index using GTDB taxonomic definitions
 
-Usage:
+The `tax_from_gtdb.py` script generates [NCBI-style](ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump_readme.txt) taxonomy files using the [GTDB](http://gtdb.ecogenomic.org) definitions. It can also prepare the sequence files necessary for building a Centrifuge and/or Kraken2 database.
 
-`./tax_from_gtdb.py --gtdb taxonomy.tsv --assemblies PATH --nodes nodes.file --names names.file --conversion conv.file --cat_fasta fasta.file`
+Usage – just make the taxonomy files:
+```
+./tax_from_gtdb.py --gtdb taxonomy.tsv --nodes nodes.dmp --names names.dmp
+```
 
-With: 
+Usage – prepare for [building a Centrifuge database](http://www.ccb.jhu.edu/software/centrifuge/manual.shtml#custom-database):
+```
+./tax_from_gtdb.py --gtdb taxonomy.tsv --assemblies genomes --nodes ex.tree --names ex.name --conversion ex.conv --cat_fasta ex.fa
+```
 
-`taxonomy.tsv`: taxonomy file obtained from the [downloads section of the GTDB website](http://gtdb.ecogenomic.org/downloads).
+Usage – prepare for [building a Kraken2 database](https://ccb.jhu.edu/software/kraken2/index.shtml?t=manual#custom-databases):
+```
+./tax_from_gtdb.py --gtdb taxonomy.tsv --assemblies genomes --nodes nodes.dmp --names names.dmp --kraken_dir kraken_genomes
+```
 
-`PATH`: the pathname to all reference genomes sequences in compressed or uncompressed fasta format.
+Input parameters:
+* `--gtdb`: taxonomy file obtained from the [downloads section of the GTDB website](http://gtdb.ecogenomic.org/downloads). Required. GTDB provides separate taxonomy files for bacteria and archaea, but these can be concatenated together to make a single taxonomy file for this script.
+* `--genomes`: a directory containing all the reference genomes sequences in FASTA format (can be gzipped). Required if you are preparing for a Centrifuge/Kraken2 database build.
 
-`nodes.file`: name and path of the output nodes file required to build an index with Centrifuge
+Output:
+* `--nodes`: filepath to save the nodes file (equivalent to NCBI's `nodes.dmp`).
+* `--names`: filepath to save the names file (equivalent to NCBI's `names.dmp`).
+* `--conversion`: filepath to save the [conversion table for Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/manual.shtml#custom-database).
+* `--cat_fasta`: filepath to save the [concatenated reference seq file for Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/manual.shtml#custom-database)
+* `--kraken_dir`: a directory to save the [Kraken2-ready reference FASTAs](https://ccb.jhu.edu/software/kraken2/index.shtml?t=manual#custom-databases).
 
-`names.file`: name and path of the output names file required to build an index with Centrifuge
-
-`conv.file`: name and path of the output conversion file required to build an index with Centrifuge
-
-`fasta.file`: name and path of the output fasta file required to build an index with Centrifuge
 
 
 
