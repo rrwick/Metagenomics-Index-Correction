@@ -37,7 +37,7 @@ Please consult the [Centrifuge manual](https://ccb.jhu.edu/software/centrifuge/m
 
 ### Kraken2
 
-[Kraken2](https://ccb.jhu.edu/software/kraken2/) is an alternative metagenomics classification tool. It is faster than Centrifuge but may use more RAM. Its indices consist of a few `*.k2d` files. Please consult the [Kraken2 manual](https://ccb.jhu.edu/software/kraken2/index.shtml?t=manual) for usage instructions.
+[Kraken2](https://ccb.jhu.edu/software/kraken2/) is an alternative metagenomics classification tool. It is faster than Centrifuge but may use more RAM. Its indices consist of a few `*.k2d` files. Please consult the [Kraken2 manual](https://ccb.jhu.edu/software/kraken2/index.shtml?t=manual) for usage instructions. As part of this work, we generated Kraken2 (and Kraken1) custom indices too, which can downloaded from [our figshare project](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534).
 
 
 
