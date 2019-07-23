@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-This script will dereplicate GTDB assemblies to a user-specified threshold,
-copying the dereplicated assemblies to a new directory.
+This script will dereplicate GTDB assemblies to a user-specified threshold, copying the
+dereplicated assemblies to a new directory.
 
 Usage:
-    dereplicate_assemblies.py --threshold 0.005 assemblies derep_assemblies bac_and_arc_taxonomy_r86.tsv
+    dereplicate_assemblies.py --threshold 0.005 assemblies derep bac_and_arc_taxonomy_r86.tsv
 """
 
 import argparse

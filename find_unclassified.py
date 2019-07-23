@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """
-This script takes two Centrifuge SAM files as input. It finds the reads in the first SAM file
-which are unclassified and then outputs the lines from the second SAM file which correspond to the
-same reads.
+This script takes two Centrifuge output files as input. It finds the reads in the first output file
+which are unclassified and then outputs the lines from the second output file which correspond to
+the same reads.
 """
 
 import argparse
-import collections
 import gzip
 import sys
 
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Find unclassified reads in another SAM')
-    parser.add_argument('sam_1', type=str,
-                        help='the SAM file for which unclassified reads will be found')
-    parser.add_argument('sam_2', type=str,
-                        help='the SAM file for which those reads will be outputted')
+    parser.add_argument('cent_1', type=str,
+                        help='the Centrifuge output file for which unclassified reads will be found')
+    parser.add_argument('cent_2', type=str,
+                        help='the Centrifuge output file for which those reads will be outputted')
     args = parser.parse_args()
     return args
 
@@ -25,15 +24,16 @@ def main():
     args = get_arguments()
 
     unclassified_reads = set()
-    with get_open_func(args.sam_1)(args.sam_1, 'rt') as sam_1_file:
-        for line in sam_1_file:
+    with get_open_func(args.cent_1)(args.cent_1, 'rt') as cent_1_file:
+        for line in cent_1_file:
             parts = line.strip().split('\t')
             read_name, classification = parts[0], parts[1]
-            if read_name == 'readID' or classification == 'unclassified':  # include the header as well as unclassified reads
+            if read_name == 'readID' or classification == 'unclassified':
+                # include the header as well as unclassified reads
                 unclassified_reads.add(read_name)
 
-    with get_open_func(args.sam_2)(args.sam_2, 'rt') as sam_2_file:
-        for line in sam_2_file:
+    with get_open_func(args.cent_2)(args.cent_2, 'rt') as cent_2_file:
+        for line in cent_2_file:
             line = line.strip()
             parts = line.split('\t')
             read_name = parts[0]

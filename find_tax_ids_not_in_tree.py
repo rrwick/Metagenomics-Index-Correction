@@ -86,7 +86,9 @@ def load_tax_ids_per_read(sam_filename):
             if seq_id == 'no rank':
                 tax_id = 1
             if tax_id == 0:
-                assert seq_id == 'unclassified'  # a taxID of 0 with a non-unclassified seqID implies something went wrong in the index building
+                # A taxID of 0 with a non-unclassified seqID implies something went wrong in the
+                # index building.
+                assert seq_id == 'unclassified'
             if read_name not in tax_ids_per_read:
                 tax_ids_per_read[read_name] = set()
             tax_ids_per_read[read_name].add(tax_id)
