@@ -1,6 +1,6 @@
 # Metagenomics Index Correction
 
-This repository contains scripts used to prepare, compare and analyse metagenomic classifications using custom index databases, either based on default [NCBI](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi) or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: _Correcting index databases improves metagenomic studies_.
+This repository contains scripts used to prepare, compare and analyse metagenomic classifications using custom index databases, either based on default [NCBI](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi) or [GTDB](http://gtdb.ecogenomic.org/) taxonomic systems. These scripts were used in the preparation of the Méric, Wick et al. (2019) manuscript entitled: [_Correcting index databases improves metagenomic studies_](https://www.biorxiv.org/content/10.1101/712166v1).
 
 Our custom index databases are hosted on figshare:<br>
 [monash.figshare.com/projects/Metagenomics_Index_Correction/65534](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534)
