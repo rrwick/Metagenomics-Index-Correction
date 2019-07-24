@@ -27,7 +27,9 @@ We used [Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/) in our manuscr
 
 Please consult the [Centrifuge manual](https://ccb.jhu.edu/software/centrifuge/manual.shtml) for full instructions on its usage, but in brief the steps are:
 
-1. Download a pre-compiled index (for instance, from our [our figshare project](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534)).
+1. Download a pre-compiled index (from our [our figshare project](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534)).
+* Latest (recommended) index: `GTDB_r89_54k` [link](https://monash.figshare.com/articles/GTDB_r89_54k/8956970) 
+* Older indices described in the manuscript: `GTDB_r86_46k & NCBI_r88_Human17k` [link](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534) 
 2. Run Centrifuge on a paired-end Illumina read set:<br>
 `centrifuge -p 16 -x index_dir -1 *_1.fq.gz -2 *_2.fq.gz`<br>
 `-S classifications --report-file report.tsv`
