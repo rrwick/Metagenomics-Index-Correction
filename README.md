@@ -12,6 +12,7 @@ Our custom index databases are hosted on figshare:<br>
   * [Centrifuge](#centrifuge)
   * [Kraken2](#kraken2)
 * [Scripts for analysis/index creation used in the manuscript](#scripts-for-analysisindex-creation-used-in-the-manuscript)
+  * [Requirements](#requirements)
   * [Custom classification indices using GTDB definitions](#custom-classification-indices-using-gtdb-definitions)
   * [Taxonomic rank counts from Centrifuge output](#taxonomic-rank-counts-from-centrifuge-output)
   * [Custom dereplication thresholds for GTDB assemblies](#custom-dereplication-thresholds-for-gtdb-assemblies)
@@ -45,6 +46,14 @@ Please consult the [Centrifuge manual](https://ccb.jhu.edu/software/centrifuge/m
 
 
 ## Scripts for analysis/index creation used in the manuscript
+
+### Requirements
+
+To run these scripts you will need:
+* Python 3.5 (or later)
+* [Biopython](https://biopython.org/)
+* [Mash](https://github.com/marbl/Mash) installed (able to be run from the command line)
+
 
 ### Custom classification indices using GTDB definitions
 
