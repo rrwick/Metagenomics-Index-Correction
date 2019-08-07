@@ -24,18 +24,19 @@ Our custom index databases are hosted on figshare:<br>
 
 ### Centrifuge
 
-We used [Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/) in our manuscript because it uses less RAM than alternative tools. Centrifuge indices consist of a few files named `*.cf`.
+We used [Centrifuge](http://www.ccb.jhu.edu/software/centrifuge/) (version 1.0.4) in our manuscript because it uses less RAM than alternative tools. Centrifuge indices consist of a few files named `*.cf`.
 
 Please consult the [Centrifuge manual](https://ccb.jhu.edu/software/centrifuge/manual.shtml) for full instructions on its usage, but in brief the steps are:
 
 1. Download a pre-compiled index (from our [our figshare project](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534)).
     * Latest (recommended) index: [`GTDB_r89_54k`](https://monash.figshare.com/articles/GTDB_r89_54k/8956970) 
     * Older indices described in the manuscript: [`GTDB_r86_46k & NCBI_r88_Human17k`](https://monash.figshare.com/projects/Metagenomics_Index_Correction/65534) 
-2. Run Centrifuge on a paired-end Illumina read set:<br>
-`centrifuge -p 16 -x index_dir -1 *_1.fq.gz -2 *_2.fq.gz`<br>
-`-S classifications --report-file report.tsv`
+2. Run Centrifuge on a paired-end Illumina read set:
+    * `centrifuge -p 16 -x index_dir -1 *_1.fq.gz -2 *_2.fq.gz`<br>`-S classifications --report-file report.tsv`
+    * If you need a paired-end read set to try this out, here is the [SRS015782](https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR061183) faecal metagenome from the Human Microbiome Project that we used in the study.
+    * We found that Centrifuge took from 10–45 minutes, depending on the size of the sample and the speed of the computer/cluster.
 3. Generate a Kraken-style summary report:<br>
-`centrifuge-kreport -x index_dir classifications > kreport.txt`
+    * `centrifuge-kreport -x index_dir classifications > kreport.txt`
 
 
 ### Kraken2
