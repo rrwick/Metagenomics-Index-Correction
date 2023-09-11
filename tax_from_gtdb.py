@@ -136,6 +136,18 @@ def set_tax_ids(all_taxa):
     id_to_taxon = {1: ''}
     taxon_to_id = {'': 1}
     tax_id_counter = itertools.count(start=2)
+
+    # If taxa for humans are included, put them first.
+    human_tax_levels = []
+    for taxon in ['d__Eukaryota', 'p__Chordata', 'c__Mammalia', 'o__Primates', 'f__Hominidae',
+                  'g__Homo', 's__Homo sapiens']:
+        if taxon in all_taxa:
+            tax_id = next(tax_id_counter)
+            id_to_taxon[tax_id] = taxon
+            taxon_to_id[taxon] = tax_id
+            all_taxa.remove(taxon)
+
+    # Then the rest of the taxa (prokaryotes) are in level/alphabetical order.
     for level in ['d__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__']:
         level_taxa = sorted(x for x in all_taxa if x.startswith(level))
         level_name = {'d__': 'domains: ', 'p__': 'phyla:   ', 'c__': 'classes: ',
@@ -149,6 +161,7 @@ def set_tax_ids(all_taxa):
             else:
                 taxon_to_id[taxon] = tax_id
         print('    {}{:>7,}'.format(level_name, len(level_taxa)))
+
     max_id = next(tax_id_counter)
     return id_to_taxon, taxon_to_id, max_id
 
